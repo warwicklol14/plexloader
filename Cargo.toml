@@ -1,0 +1,6 @@
+[workspace]
+
+members = [
+	"plexloader_lib",
+	"plexloader_cli"
+]
