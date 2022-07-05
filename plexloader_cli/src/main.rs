@@ -1,32 +1,31 @@
-use plexloader_lib::LoginDetails;
-use plexloader_lib::downloader::{PlexDownloader};
+use clap::{Parser, Subcommand};
 
-use clap::Parser;
+mod commands;
+mod utils;
 
 #[derive(Parser)]
 #[clap(version)]
 struct PlexLoaderCli {
-    /// Plex username
-    #[clap(short, long)]
-    username: String,
+    #[clap(subcommand)]
+    command: Commands,
+}
 
-    /// Plex password
-    #[clap(short, long)]
-    password: String,
+
+#[derive(Subcommand)]
+enum Commands {
+    /// Login to Plex
+    Login(commands::Login),
+
+    /// Download from Plex
+    Download(commands::Download)
 }
 
 fn main() {
-    let args = PlexLoaderCli::parse();
+    let cli = PlexLoaderCli::parse();
 
-    let user_login = LoginDetails {
-        username: args.username,
-        password: args.password
-    };
-
-    let plex_downloader = PlexDownloader::new(user_login);
-
-    println!("{:?}", plex_downloader);
-
-    println!("{:?}", plex_downloader.get_servers());
+    match &cli.command {
+        Commands::Login(login) => login.handle(),
+        Commands::Download(download) => download.handle(),
+    }
 }
     
