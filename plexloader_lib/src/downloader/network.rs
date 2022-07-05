@@ -1,6 +1,7 @@
 use ureq::{Agent, Request, MiddlewareNext, Response, Error};
+use serde::de::DeserializeOwned;
 use crate::constants::*;
-use crate::{PlexUser, PlexUserResponse, PlexServer};
+use crate::NetworkResponseError;
 
 fn plex_default_header_middleware(req: Request, next: MiddlewareNext) -> Result<Response, Error> {
     next.handle(req.set(PLEX_CLIENT_IDENTIFIER_HEADER_NAME, PLEX_CLIENT_IDENTIFIER_HEADER_VALUE)
@@ -18,19 +19,28 @@ fn plex_login_params<'a>(username: &'a str, password: &'a str) -> [(&'a str, &'a
     [(PLEX_LOGIN_USERNAME_FORM_NAME, username), (PLEX_LOGIN_PASSWORD_FORM_NAME, password)]
 }
 
-pub fn plex_servers(auth_token: &str) -> Vec<PlexServer> {
-    let response = plex_agent()
+pub fn plex_servers(auth_token: &str) -> Result<Response, Error> {
+    plex_agent()
         .get(PLEX_SERVER_ENDPOINT)
         .set(PLEX_TOKEN_HEADER_NAME, auth_token)
         .call()
-        .expect("Unable to get plex servers");
-    response.into_json::<Vec<PlexServer>>().expect("Unable to deserialize to json")
 }
 
-pub fn plex_login(username: &str, password: &str) -> PlexUser {
-    let response = plex_agent()
+pub fn plex_login(username: &str, password: &str) -> Result<Response, Error> {
+    plex_agent()
         .post(PLEX_USER_SIGN_IN_ENDPOINT)
         .send_form(&plex_login_params(username, password))
-        .expect("Unable to send plex login request");
-    response.into_json::<PlexUserResponse>().expect("Unable to deserialize to json").user
+}
+
+pub fn get_json_from_response<T: DeserializeOwned>(req: Result<Response, Error>) -> Result<T,NetworkResponseError> {
+    match req {
+        Ok(response) => {
+           match serde_json::from_reader(response.into_reader()) {
+                Ok(response_json) => Ok(response_json),
+                Err(e) => Err(NetworkResponseError::SerializationError(e))
+          }
+        },
+        Err(Error::Status(401, _r)) => Err(NetworkResponseError::UnAuthorized),
+        Err(e) => Err(NetworkResponseError::UnknownError(e))
+    }
 }
