@@ -1,18 +1,17 @@
 mod network;
+pub mod login;
 
-use super::{PlexUser, LoginDetails, PlexServer};
+use super::{PlexUser, PlexServer};
 
 #[derive(Debug)]
 pub struct PlexDownloader {
-    login_details: LoginDetails,
     plex_user: PlexUser
 }
 
 impl PlexDownloader {
-    pub fn new(login_details: LoginDetails) -> PlexDownloader {
+    pub fn new(plex_user: PlexUser) -> PlexDownloader {
         PlexDownloader {
-            plex_user: network::plex_login(&login_details.username, &login_details.password),
-            login_details
+            plex_user
         }
     }
 
