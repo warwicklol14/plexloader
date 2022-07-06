@@ -1,6 +1,6 @@
 use clap::{Args};
 
-use plexloader_lib::downloader::login::plex_login_through_credentials;
+use plexloader_lib::loader::login::plex_login_through_credentials;
 use plexloader_lib::NetworkResponseError;
 
 use crate::utils::serialize_plex_user;

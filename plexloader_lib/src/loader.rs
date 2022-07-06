@@ -6,13 +6,13 @@ use crate::{NetworkResponseError, MediaUriParsingError, ServerFetchError};
 use crate::utils::*;
 
 #[derive(Debug)]
-pub struct PlexDownloader {
+pub struct PlexLoader {
     plex_user: PlexUser
 }
 
-impl PlexDownloader {
-    pub fn new(plex_user: PlexUser) -> PlexDownloader {
-        PlexDownloader {
+impl PlexLoader {
+    pub fn new(plex_user: PlexUser) -> PlexLoader {
+        PlexLoader {
             plex_user
         }
     }
