@@ -40,22 +40,11 @@ pub fn get_download_dir() -> PathBuf {
         .unwrap_or(PathBuf::from("./Downloads"))
 }
 
-use thiserror::Error;
 
-#[derive(Error, Debug)]
-#[error("can't load auth details")]
-pub enum PlexUserDeserializationError {
-    #[error("file couldn't be opened for reading")]
-    FileError(#[from] std::io::Error),
-
-    #[error("unable to deserialize json")]
-    DeserializationError(#[from] serde_json::Error),
-}
-
-pub fn deserialize_plex_user() -> Result<PlexUser, PlexUserDeserializationError> {
+pub fn deserialize_plex_user() -> std::io::Result<PlexUser> {
     let plex_user_json_file = File::open(get_auth_file_path().as_path())?;
-    serde_json::from_reader(plex_user_json_file)
-        .map_err(|e| PlexUserDeserializationError::DeserializationError(e))
+    let plex_user: PlexUser = serde_json::from_reader(plex_user_json_file)?;
+    Ok(plex_user)
 }
 
 pub fn print_err(r: anyhow::Result<()>) {
