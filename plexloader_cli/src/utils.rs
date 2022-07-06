@@ -1,5 +1,7 @@
 use plexloader_lib::PlexUser;
 use std::fs::File;
+use std::path::{PathBuf, Path};
+use directories::ProjectDirs;
 
 pub fn serialize_plex_user(plex_user: PlexUser) -> std::io::Result<()> {
     let plex_user_json_file = File::create("auth.json")?;
@@ -7,10 +9,20 @@ pub fn serialize_plex_user(plex_user: PlexUser) -> std::io::Result<()> {
     Ok(())
 }
 
+pub fn get_cli_data_dir() -> PathBuf {
+    if let Some(project_dirs) = ProjectDirs::from("com", "warwick", "plexloader_cli") {
+        project_dirs.data_dir().to_path_buf()
+    }
+    else {
+        Path::new("./data").to_path_buf()
+    }
+}
+
 use thiserror::Error;
 
 #[derive(Error, Debug)]
-pub enum PlexUserDeserializationError{
+#[error("can't load auth details")]
+pub enum PlexUserDeserializationError {
     #[error("file couldn't be opened for reading")]
     FileError(#[from] std::io::Error),
 
@@ -19,16 +31,18 @@ pub enum PlexUserDeserializationError{
 }
 
 pub fn deserialize_plex_user() -> Result<PlexUser, PlexUserDeserializationError> {
-    let plex_user_json_file = File::open("auth.json")?;
-    match serde_json::from_reader(plex_user_json_file) {
-        Ok(plex_user) => Ok(plex_user),
-        Err(e) => Err(PlexUserDeserializationError::DeserializationError(e))
-    }
+    let mut plex_user_json_file_path = get_cli_data_dir();
+    plex_user_json_file_path.push("auth.json");
+    let plex_user_json_file = File::open(plex_user_json_file_path.as_path())?;
+    serde_json::from_reader(plex_user_json_file)
+        .map_err(|e| PlexUserDeserializationError::DeserializationError(e))
 }
 
 pub fn print_err(r: anyhow::Result<()>) {
     if let Err(e) = r {
         eprintln!("Error: {e}");
-        e.chain().skip(1).for_each(|cause| eprintln!("because: {}", cause));
+        e.chain()
+            .skip(1)
+            .for_each(|cause| eprintln!("because: {}", cause));
     }
 }

@@ -11,3 +11,4 @@ clap = { version = "3.2.8", features = ["derive"] }
 serde_json = "1.0.82"
 thiserror = "1.0.31"
 anyhow = "1.0.58"
+directories = "4.0.1"
