@@ -25,7 +25,7 @@ fn main() {
     let cli = PlexLoaderCli::parse();
 
     match &cli.command {
-        Commands::Login(login) => utils::print_err(login.handle()),
-        Commands::Download(download) => utils::print_err(download.handle()),
+        Commands::Login(login) => commands::handle_command(login),
+        Commands::Download(download) => commands::handle_command(download),
     };
 }

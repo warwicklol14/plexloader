@@ -1,5 +1,7 @@
 use clap::Args;
 
+use super::CommandHandler;
+
 use anyhow::{Result, Context};
 
 use crate::utils::{deserialize_plex_user};
@@ -12,8 +14,8 @@ pub struct Download {
     link: String,
 }
 
-impl Download {
-    pub fn handle(self: &Self) -> Result<()> {
+impl CommandHandler for Download {
+    fn handle(self: &Self) -> Result<()> {
         let plex_user = deserialize_plex_user()
             .with_context(|| "Unable to use previous auth. Maybe try logging in again?")?;
         let plex_loader = PlexLoader::new(plex_user);

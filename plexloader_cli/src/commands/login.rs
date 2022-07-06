@@ -4,6 +4,7 @@ use plexloader_lib::loader::login::plex_login_through_credentials;
 use plexloader_lib::NetworkResponseError;
 
 use crate::utils::serialize_plex_user;
+use super::CommandHandler;
 
 #[derive(Args)]
 pub struct Login {
@@ -24,8 +25,8 @@ pub enum LoginCommandError{
     NetworkResponseError(#[from] NetworkResponseError),
 }
 
-impl Login {
-    pub fn handle(self: &Self) -> anyhow::Result<()> {
+impl CommandHandler for Login {
+    fn handle(self: &Self) -> anyhow::Result<()> {
         let plex_user = plex_login_through_credentials(&self.username, &self.password)?;
         serialize_plex_user(plex_user)?;
         println!("Login was successfull");
