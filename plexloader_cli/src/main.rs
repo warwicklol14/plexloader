@@ -20,6 +20,8 @@ enum Commands {
 }
 
 fn main() {
+    utils::print_err(utils::init_dirs());
+
     let cli = PlexLoaderCli::parse();
 
     match &cli.command {

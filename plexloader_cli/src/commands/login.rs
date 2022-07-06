@@ -28,6 +28,7 @@ impl Login {
     pub fn handle(self: &Self) -> anyhow::Result<()> {
         let plex_user = plex_login_through_credentials(&self.username, &self.password)?;
         serialize_plex_user(plex_user)?;
+        println!("Login was successfull");
         Ok(())
     }
 }
