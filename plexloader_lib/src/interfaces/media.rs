@@ -3,29 +3,44 @@ use serde::Deserialize;
 #[derive(Deserialize, Debug)]
 #[serde(rename = "MediaContainer")]
 pub struct PlexMediaContainer {
-    #[serde(rename = "Metadata")]
-    metadata: Vec<PlexMediaMetadata>,
+    #[serde(rename = "$value")]
+    pub item: PlexContainerItem,
 }
 
 #[derive(Deserialize, Debug)]
-pub struct PlexMediaMetadata {
-    key: String,
+pub enum PlexContainerItem {
+    Video(PlexVideo),
+    Directory(PlexDirectory)
+}
 
-    #[serde(rename = "type")]
-    media_type: String,
-
+#[derive(Deserialize, Debug)]
+pub struct PlexDirectory {
+    pub title: String,
+    pub key: String,
+}
+    
+#[derive(Deserialize, Debug)]
+pub struct PlexVideo {
     #[serde(rename = "Media")]
-    media: PlexMedia
+    pub media: PlexMedia,
+
+    pub title: String
 }
 
 #[derive(Deserialize, Debug)]
 pub struct PlexMedia {
     #[serde(rename = "Part")]
-    part: PlexMediaPart
+    pub part: PlexMediaPart
 }
 
 #[derive(Deserialize, Debug)]
 pub struct PlexMediaPart {
-    key: String,
+    pub key: String,
+}
+
+#[derive(Debug)]
+pub struct PlexMediaMetadataUri {
+    pub server_token: String,
+    pub media_metadata_uri: String
 }
 

@@ -25,3 +25,10 @@ pub fn deserialize_plex_user() -> Result<PlexUser, PlexUserDeserializationError>
         Err(e) => Err(PlexUserDeserializationError::DeserializationError(e))
     }
 }
+
+pub fn print_err(r: anyhow::Result<()>) {
+    if let Err(e) = r {
+        eprintln!("Error: {e}");
+        e.chain().skip(1).for_each(|cause| eprintln!("because: {}", cause));
+    }
+}

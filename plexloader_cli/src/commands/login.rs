@@ -16,17 +16,18 @@ pub struct Login {
     password: String,
 }
 
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum LoginCommandError{
+    #[error("Error: net {0}")]
+    NetworkResponseError(#[from] NetworkResponseError),
+}
+
 impl Login {
-    pub fn handle(self: &Self) {
-        match plex_login_through_credentials(&self.username, &self.password) {
-            Ok(plex_user) =>  {
-                match serialize_plex_user(plex_user) {
-                    Ok(_) => println!("Login was successfull! Saved token to file. Now you can use the download option"),
-                    Err(e) => eprintln!("Error: Unable to write to auth file {:?}", e)
-                }
-            },
-            Err(NetworkResponseError::UnAuthorized) => eprintln!("Error: Got unauthorized response. Please check your login credentials to see if they are correct!"),
-            Err(e) => eprintln!("Error: {:?}", e),
-        }
+    pub fn handle(self: &Self) -> anyhow::Result<()> {
+        let plex_user = plex_login_through_credentials(&self.username, &self.password)?;
+        serialize_plex_user(plex_user)?;
+        Ok(())
     }
 }

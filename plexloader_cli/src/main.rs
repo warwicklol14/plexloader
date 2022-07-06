@@ -10,22 +10,20 @@ struct PlexLoaderCli {
     command: Commands,
 }
 
-
 #[derive(Subcommand)]
 enum Commands {
     /// Login to Plex
     Login(commands::Login),
 
     /// Download from Plex
-    Download(commands::Download)
+    Download(commands::Download),
 }
 
 fn main() {
     let cli = PlexLoaderCli::parse();
 
     match &cli.command {
-        Commands::Login(login) => login.handle(),
-        Commands::Download(download) => download.handle(),
-    }
+        Commands::Login(login) => utils::print_err(login.handle()),
+        Commands::Download(download) => utils::print_err(download.handle()),
+    };
 }
-    

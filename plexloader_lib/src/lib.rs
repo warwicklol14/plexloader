@@ -1,6 +1,6 @@
 pub mod downloader;
 mod constants;
-mod utils;
+pub mod utils;
 mod interfaces;
 
 pub use interfaces::*;
