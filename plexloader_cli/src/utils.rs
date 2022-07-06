@@ -1,7 +1,7 @@
 use plexloader_lib::PlexUser;
 use std::fs::File;
 use std::path::{PathBuf, Path};
-use directories::ProjectDirs;
+use directories::{ProjectDirs, UserDirs};
 
 pub fn serialize_plex_user(plex_user: PlexUser) -> std::io::Result<()> {
     let plex_user_json_file = File::create("auth.json")?;
@@ -10,12 +10,15 @@ pub fn serialize_plex_user(plex_user: PlexUser) -> std::io::Result<()> {
 }
 
 pub fn get_cli_data_dir() -> PathBuf {
-    if let Some(project_dirs) = ProjectDirs::from("com", "warwick", "plexloader_cli") {
-        project_dirs.data_dir().to_path_buf()
-    }
-    else {
-        Path::new("./data").to_path_buf()
-    }
+    ProjectDirs::from("com", "warwick", "plexloader_cli")
+        .map_or(PathBuf::from("./data"), |project_dirs| project_dirs.data_dir().to_path_buf())
+}
+
+
+pub fn get_download_dir() -> PathBuf {
+    UserDirs::new()
+        .and_then(|user_dirs: UserDirs| Some(user_dirs.video_dir()?.to_path_buf()) )
+        .unwrap_or(PathBuf::from("./Downloads"))
 }
 
 use thiserror::Error;
