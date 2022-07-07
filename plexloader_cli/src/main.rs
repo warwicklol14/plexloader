@@ -17,6 +17,9 @@ enum Commands {
 
     /// Download from Plex
     Download(commands::Download),
+
+    /// Information about requested resource from Plex
+    Info(commands::Info),
 }
 
 fn main() {
@@ -27,5 +30,6 @@ fn main() {
     match &cli.command {
         Commands::Login(login) => commands::handle_command(login),
         Commands::Download(download) => commands::handle_command(download),
+        Commands::Info(info) => commands::handle_command(info),
     };
 }

@@ -21,7 +21,7 @@ pub fn get_servers(plex_user: &PlexUser) -> Result<Vec<PlexServer>, ServerFetchE
 #[derive(Debug)]
 pub struct PlexLoader {
     plex_user: PlexUser,
-    servers: Vec<PlexServer>
+    pub servers: Vec<PlexServer>
 }
 
 impl PlexLoader {

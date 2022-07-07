@@ -24,6 +24,8 @@ pub struct PlexVideo {
     #[serde(rename = "Media")]
     pub media: PlexMedia,
 
+    pub file: String,
+
     pub title: String
 }
 
