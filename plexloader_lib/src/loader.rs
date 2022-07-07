@@ -1,9 +1,11 @@
 mod network;
 pub mod login;
+pub mod downloader;
 
-use super::{PlexUser, PlexServer, PlexMediaMetadataUri, PlexMediaContainer, Resources, PlexMediaResource, PlexContainerItem};
-use crate::{NetworkResponseError, MediaUriParsingError, ServerFetchError, MediaResourceFetchError};
+use crate::interfaces::*;
 use crate::utils::*;
+use downloader::download_aria;
+use std::path::PathBuf;
 
 fn get_resources(plex_user: &PlexUser) -> Result<Resources, NetworkResponseError> {
     let response = network::plex_resources(&plex_user.auth_token);
@@ -18,7 +20,6 @@ pub fn get_servers(plex_user: &PlexUser) -> Result<Vec<PlexServer>, ServerFetchE
     Ok(servers)
 }
 
-#[derive(Debug)]
 pub struct PlexLoader {
     plex_user: PlexUser,
     pub servers: Vec<PlexServer>
@@ -56,19 +57,30 @@ impl PlexLoader {
         match req_media_container.item {
             PlexContainerItem::Video(v) => {
                 Ok(PlexMediaResource {
-                    name: v.title,
+                    title: v.title,
+                    file_name: PathBuf::from(v.media.part.file),
+                    access_token: req_media_metadata_uri.server_token,
                     resource_path: append_to_plex_server_uri(&req_media_metadata_uri.server_uri, &v.media.part.key),
-                    children: None
                 })
             }
             PlexContainerItem::Directory(d) => {
                 Ok(PlexMediaResource {
-                    name: d.title,
+                    title: d.title,
+                    file_name: PathBuf::new(),
+                    access_token: req_media_metadata_uri.server_token,
                     resource_path: d.key,
-                    children: None
                 })
             }
         }
+    }
+
+    pub fn download_media(self, media_link: &str, mut download_path: PathBuf) -> Result<(), MediaDownloadError>{ 
+        let media_resource = self.get_media_resource(media_link)?;
+        let file_name = media_resource.file_name.file_name().ok_or(FileNameNotFoundError {})?;
+        download_path.push(file_name);
+        let mut child = download_aria(&media_resource.resource_path, &download_path, &media_resource.access_token)?;
+        child.wait()?;
+        Ok(())
     }
 
 }

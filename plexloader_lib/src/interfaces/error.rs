@@ -21,6 +21,10 @@ pub enum MediaUriParsingError{
     ServerNotFoundError(#[from] ServerNotFoundError),
 }
 
+#[derive(Error, Debug)]
+#[error("can't find file name")]
+pub struct FileNameNotFoundError {}
+
 #[derive(Error, Debug, PartialEq)]
 #[error("can't find the given link in your accessible servers")]
 pub struct ServerNotFoundError {}
@@ -44,3 +48,10 @@ pub enum MediaResourceFetchError {
     NetworkError(#[from] NetworkResponseError)
 }
 
+#[derive(Error, Debug)]
+#[error("can't download media")]
+pub enum MediaDownloadError {
+    FetchError(#[from] MediaResourceFetchError),
+    AriaError(#[from] std::io::Error),
+    FileNameError(#[from] FileNameNotFoundError),
+}

@@ -2,7 +2,7 @@ use clap::{Args};
 use plexloader_lib::loader::PlexLoader;
 use crate::utils::{info, success};
 
-use anyhow::{Result, Context};
+use anyhow::{Result};
 
 #[derive(Args)]
 pub struct Servers {}

@@ -1,5 +1,10 @@
 use crate::{Connections, PlexServer, Resource, ServerNotFoundError, URINotFoundError};
 use url::{ParseError, Url};
+use crate::constants::PLEX_TOKEN_HEADER_NAME;
+
+pub fn construct_token_header(server_token: &str) -> String {
+    format!("{}: {}", PLEX_TOKEN_HEADER_NAME, server_token)
+}
 
 pub fn get_media_metadata_from_url(url: &str) -> Result<(String, String), ParseError> {
     let parsed_url = Url::parse(url)?;
