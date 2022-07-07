@@ -24,12 +24,12 @@ pub fn get_media_metadata_from_url(url: &str) -> Result<(String, String), ParseE
     }
 }
 
-pub fn find_server_from_hash(
-    servers: Vec<PlexServer>,
+pub fn find_server_from_hash<'a>(
+    servers: &'a Vec<PlexServer>,
     server_hash: &str,
-) -> Result<PlexServer, ServerNotFoundError> {
+) -> Result<&'a PlexServer, ServerNotFoundError> {
     servers
-        .into_iter()
+        .iter()
         .find(|s| s.client_identifier.eq(server_hash))
         .ok_or(ServerNotFoundError {})
 }

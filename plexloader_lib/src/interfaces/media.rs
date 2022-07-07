@@ -41,6 +41,15 @@ pub struct PlexMediaPart {
 #[derive(Debug)]
 pub struct PlexMediaMetadataUri {
     pub server_token: String,
-    pub media_metadata_uri: String
+    pub media_metadata_uri: String,
+    pub server_uri: String
+}
+
+
+#[derive(Debug)]
+pub struct PlexMediaResource {
+    pub name: String,
+    pub resource_path: String,
+    pub children: Option<Vec<PlexMediaResource>>,
 }
 

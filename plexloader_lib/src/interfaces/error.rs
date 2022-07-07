@@ -36,3 +36,11 @@ pub enum ServerFetchError {
     URIError(#[from] URINotFoundError),
     NetworkError(#[from] NetworkResponseError)
 }
+
+#[derive(Error, Debug)]
+#[error("can't fetch plex media resource details")]
+pub enum MediaResourceFetchError {
+    ParsingError(#[from] MediaUriParsingError),
+    NetworkError(#[from] NetworkResponseError)
+}
+
