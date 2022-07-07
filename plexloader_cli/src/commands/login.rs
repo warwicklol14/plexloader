@@ -4,7 +4,7 @@ use plexloader_lib::loader::login::plex_login_through_credentials;
 
 use anyhow::{Context};
 
-use crate::utils::serialize_plex_user;
+use crate::utils::{serialize_plex_user, success};
 use super::CommandHandler;
 
 #[derive(Args)]
@@ -24,7 +24,7 @@ impl CommandHandler for Login {
             .with_context(|| "unable to to login. check your credentials")?;
         serialize_plex_user(plex_user)
             .with_context(|| "unable to save auth info")?;
-        println!("Login was successfull");
+        println!("{}", success().apply_to("Login was successfull"));
         Ok(())
     }
 }

@@ -1,4 +1,5 @@
 use plexloader_lib::PlexUser;
+use console::{style, Style};
 use std::fs::File;
 use std::fs::create_dir_all;
 use std::path::{PathBuf};
@@ -47,12 +48,26 @@ pub fn deserialize_plex_user() -> std::io::Result<PlexUser> {
     Ok(plex_user)
 }
 
+pub fn success() -> Style{
+    Style::new().green()
+}
+
+pub fn info() -> Style {
+    Style::new().yellow()
+}
+
+pub fn error() -> Style {
+    Style::new().red()
+}
+
 pub fn print_err(r: anyhow::Result<()>) {
     if let Err(e) = r {
-        eprintln!("Error: {e}");
+        eprintln!("{}: {}", error().apply_to("Error"), style(&e).bold());
+        eprintln!("");
+        eprintln!("{}:", info().apply_to("Caused by"));
         e.chain()
             .skip(1)
-            .for_each(|cause| eprintln!("because: {}", cause));
+            .for_each(|cause| eprintln!("\t{}", style(&cause).bold()));
         std::process::exit(1);
     }
 }
