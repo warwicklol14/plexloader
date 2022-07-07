@@ -1,10 +1,9 @@
 use clap::{Subcommand, Parser};
 
-use crate::utils::{deserialize_plex_user};
-use plexloader_lib::loader::PlexLoader;
+use crate::utils::{get_plex_loader};
 use super::CommandHandler;
 
-use anyhow::{Result, Context};
+use anyhow::{Result};
 
 mod link;
 
@@ -23,9 +22,7 @@ enum DownloadCommands {
 
 impl CommandHandler for Download {
     fn handle(self: &Self) -> Result<()> {
-        let plex_user = deserialize_plex_user()
-            .with_context(|| "unable to use previous auth. try logging in again?")?;
-        let plex_loader = PlexLoader::new(plex_user);
+        let plex_loader = get_plex_loader()?;
         match &self.command {
             DownloadCommands::Link(link) => link.handle(plex_loader)?,
         }
