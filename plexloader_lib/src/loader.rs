@@ -7,7 +7,8 @@ use crate::interfaces::*;
 use crate::utils::*;
 use downloader::download_aria;
 use player::play_media_mpv;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+
 
 fn get_resources(plex_user: &PlexUser) -> Result<Resources, NetworkResponseError> {
     let response = network::plex_resources(&plex_user.auth_token);
@@ -76,11 +77,10 @@ impl PlexLoader {
         }
     }
 
-    pub fn download_media(self, media_link: &str, mut download_path: PathBuf) -> Result<(), MediaDownloadError>{ 
+    pub fn download_media(self, media_link: &str, download_dir_path: PathBuf) -> Result<(), MediaDownloadError>{ 
         let media_resource = self.get_media_resource(media_link)?;
-        let file_name = media_resource.file_name.file_name().ok_or(FileNameNotFoundError {})?;
-        download_path.push(file_name);
-        let mut child = download_aria(&media_resource.resource_path, &download_path, &media_resource.access_token)?;
+        let file_name = Path::new(media_resource.file_name.file_name().ok_or(FileNameNotFoundError {})?);
+        let mut child = download_aria(&media_resource.resource_path, &download_dir_path , &file_name, &media_resource.access_token)?;
         child.wait()?;
         Ok(())
     }
