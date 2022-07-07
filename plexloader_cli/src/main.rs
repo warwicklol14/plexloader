@@ -17,6 +17,9 @@ enum Commands {
 
     /// Download from Plex
     Download(commands::Download),
+    
+    /// Play from Plex
+    Play(commands::Play),
 
     /// Information about requested resource from Plex
     Info(commands::Info),
@@ -31,5 +34,6 @@ fn main() {
         Commands::Login(login) => commands::handle_command(login),
         Commands::Download(download) => commands::handle_command(download),
         Commands::Info(info) => commands::handle_command(info),
+        Commands::Play(play) => commands::handle_command(play),
     };
 }

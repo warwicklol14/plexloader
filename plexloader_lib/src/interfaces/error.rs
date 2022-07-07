@@ -55,3 +55,11 @@ pub enum MediaDownloadError {
     AriaError(#[from] std::io::Error),
     FileNameError(#[from] FileNameNotFoundError),
 }
+
+#[derive(Error, Debug)]
+#[error("can't playback media")]
+pub enum MediaPlaybackError {
+    FetchError(#[from] MediaResourceFetchError),
+    MpvError(#[from] std::io::Error),
+}
+

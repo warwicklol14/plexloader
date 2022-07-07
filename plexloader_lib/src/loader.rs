@@ -1,10 +1,12 @@
 mod network;
 pub mod login;
-pub mod downloader;
+mod downloader;
+mod player;
 
 use crate::interfaces::*;
 use crate::utils::*;
 use downloader::download_aria;
+use player::play_media_mpv;
 use std::path::PathBuf;
 
 fn get_resources(plex_user: &PlexUser) -> Result<Resources, NetworkResponseError> {
@@ -83,4 +85,10 @@ impl PlexLoader {
         Ok(())
     }
 
+    pub fn playback_media(self, media_link: &str) -> Result<(), MediaPlaybackError>{ 
+        let media_resource = self.get_media_resource(media_link)?;
+        let mut child = play_media_mpv(&media_resource.resource_path, &media_resource.title, &media_resource.access_token)?;
+        child.wait()?;
+        Ok(())
+    }
 }
