@@ -1,5 +1,5 @@
 use serde::Deserialize;
-use std::path::PathBuf;
+use std::fmt;
 
 #[derive(Deserialize, Debug)]
 #[serde(rename = "MediaContainer")]
@@ -23,7 +23,7 @@ pub struct PlexDirectory {
 #[derive(Deserialize, Debug)]
 pub struct PlexVideo {
     #[serde(rename = "Media")]
-    pub media: PlexMedia,
+    pub media: Vec<PlexMedia>,
 
     pub title: String
 }
@@ -51,8 +51,13 @@ pub struct PlexMediaMetadataUri {
 #[derive(Debug)]
 pub struct PlexMediaResource {
     pub title: String,
-    pub file_name: PathBuf,
+    pub file_name: String,
     pub access_token: String,
     pub resource_path: String,
 }
 
+impl fmt::Display for PlexMediaResource {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}\t{}", self.title, self.file_name)
+    }
+}

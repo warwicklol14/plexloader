@@ -45,21 +45,19 @@ pub enum ServerFetchError {
 #[error("can't fetch plex media resource details")]
 pub enum MediaResourceFetchError {
     ParsingError(#[from] MediaUriParsingError),
-    NetworkError(#[from] NetworkResponseError)
+    NetworkError(#[from] NetworkResponseError),
+    FileNameError(#[from] FileNameNotFoundError),
 }
 
 #[derive(Error, Debug)]
 #[error("can't download media")]
 pub enum MediaDownloadError {
-    FetchError(#[from] MediaResourceFetchError),
     AriaError(#[from] std::io::Error),
-    FileNameError(#[from] FileNameNotFoundError),
 }
 
 #[derive(Error, Debug)]
 #[error("can't playback media")]
 pub enum MediaPlaybackError {
-    FetchError(#[from] MediaResourceFetchError),
     MpvError(#[from] std::io::Error),
 }
 

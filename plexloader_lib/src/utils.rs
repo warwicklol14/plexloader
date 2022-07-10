@@ -1,9 +1,23 @@
-use crate::{Connections, PlexServer, Resource, ServerNotFoundError, URINotFoundError};
+use crate::{Connections, PlexServer, Resource, ServerNotFoundError, URINotFoundError, FileNameNotFoundError};
 use url::{ParseError, Url};
+use std::path::{Path};
 use crate::constants::PLEX_TOKEN_HEADER_NAME;
 
 pub fn construct_token_header(server_token: &str) -> String {
     format!("{}: {}", PLEX_TOKEN_HEADER_NAME, server_token)
+}
+
+pub fn truncate_to_filename(mut media_file_name_path: String) -> Result<String, FileNameNotFoundError> {
+    let filename = Path::new(&media_file_name_path)
+        .file_name().ok_or(FileNameNotFoundError {})?;
+    
+    let filename_len = filename.to_str()
+        .ok_or(FileNameNotFoundError {})?
+        .len();
+    
+    media_file_name_path.drain(..media_file_name_path.len() - filename_len);
+    
+    Ok(media_file_name_path)
 }
 
 pub fn get_media_metadata_from_url(url: &str) -> Result<(String, String), ParseError> {

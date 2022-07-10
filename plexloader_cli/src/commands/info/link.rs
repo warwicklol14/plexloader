@@ -12,10 +12,12 @@ pub struct Link {
 
 impl Link {
     pub fn handle(self: &Self, plex_loader: PlexLoader) -> Result<()> {
-        let media_resource = plex_loader.get_media_resource(&self.link)
+        let media_resources = plex_loader.get_media_resources(&self.link)
             .with_context(|| "unable to get media")?;
         println!("{}", success().apply_to("These are the following media found from the given link:"));
-        println!("\t{}", info().apply_to(&media_resource.title));
+        for media in media_resources {
+            println!("\t{}", info().apply_to(&media));
+        }
         Ok(())
     }
 }

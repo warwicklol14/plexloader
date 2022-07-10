@@ -7,7 +7,7 @@ use crate::interfaces::*;
 use crate::utils::*;
 use downloader::download_aria;
 use player::play_media_mpv;
-use std::path::{Path, PathBuf};
+use std::path::{Path};
 
 
 fn get_resources(plex_user: &PlexUser) -> Result<Resources, NetworkResponseError> {
@@ -54,39 +54,40 @@ impl PlexLoader {
         })
     }
 
-    pub fn get_media_resource(&self, media_link: &str) -> Result<PlexMediaResource, MediaResourceFetchError> {
+    pub fn get_media_resources(&self, media_link: &str) -> Result<Vec<PlexMediaResource>, MediaResourceFetchError> {
         let req_media_metadata_uri = self.get_metadata_uri(media_link)?;
         let req_media_container = self.get_media(&req_media_metadata_uri)?;
         match req_media_container.item {
             PlexContainerItem::Video(v) => {
-                Ok(PlexMediaResource {
-                    title: v.title,
-                    file_name: PathBuf::from(v.media.part.file),
-                    access_token: req_media_metadata_uri.server_token,
-                    resource_path: append_to_plex_server_uri(&req_media_metadata_uri.server_uri, &v.media.part.key),
-                })
+                let mut media_resources = vec![];
+                for media in v.media {
+                    media_resources.push(PlexMediaResource {
+                        title: v.title.clone(),
+                        file_name: truncate_to_filename(media.part.file)?,
+                        access_token: req_media_metadata_uri.server_token.clone(),
+                        resource_path: append_to_plex_server_uri(&req_media_metadata_uri.server_uri, &media.part.key),
+                    })
+                }
+                Ok(media_resources)
             }
             PlexContainerItem::Directory(d) => {
-                Ok(PlexMediaResource {
+                Ok(vec![(PlexMediaResource {
                     title: d.title,
-                    file_name: PathBuf::new(),
+                    file_name: String::new(),
                     access_token: req_media_metadata_uri.server_token,
                     resource_path: d.key,
-                })
+                })])
             }
         }
     }
 
-    pub fn download_media(self, media_link: &str, download_dir_path: PathBuf) -> Result<(), MediaDownloadError>{ 
-        let media_resource = self.get_media_resource(media_link)?;
-        let file_name = Path::new(media_resource.file_name.file_name().ok_or(FileNameNotFoundError {})?);
-        let mut child = download_aria(&media_resource.resource_path, &download_dir_path , &file_name, &media_resource.access_token)?;
+    pub fn download_media(&self, media_resource: &PlexMediaResource, download_dir_path: &Path) -> Result<(), MediaDownloadError>{ 
+        let mut child = download_aria(&media_resource.resource_path, &download_dir_path , &media_resource.file_name, &media_resource.access_token)?;
         child.wait()?;
         Ok(())
     }
 
-    pub fn playback_media(self, media_link: &str) -> Result<(), MediaPlaybackError>{ 
-        let media_resource = self.get_media_resource(media_link)?;
+    pub fn playback_media(&self, media_resource: &PlexMediaResource) -> Result<(), MediaPlaybackError>{ 
         let mut child = play_media_mpv(&media_resource.resource_path, &media_resource.title, &media_resource.access_token)?;
         child.wait()?;
         Ok(())
