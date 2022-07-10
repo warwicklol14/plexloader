@@ -41,29 +41,28 @@ pub fn plex_media(media_link: &str, access_token: &str) -> Result<Response,Error
 }
 
 pub fn get_json_from_response<T: DeserializeOwned>(req: Result<Response, Error>) -> Result<T,NetworkResponseError> {
-    match req {
-        Ok(response) => {
-           match serde_json::from_reader(response.into_reader()) {
-                Ok(response_json) => Ok(response_json),
-                Err(e) => Err(NetworkResponseError::JSONSerializationError(e))
-          }
-        },
-        Err(Error::Status(401, _r)) => Err(NetworkResponseError::UnAuthorized),
-        Err(e) => Err(NetworkResponseError::UnknownNetworkError(e))
-    }
+    req.map(|response| response.into_reader())
+        .map_err(|e|  
+            if let Error::Status(401, _r) = e {
+                NetworkResponseError::UnAuthorized
+            }
+            else {
+                NetworkResponseError::UnknownNetworkError(e)
+            })
+        .and_then(|reader| Ok(serde_json::from_reader(reader)?))
 }
 
 
 pub fn get_xml_from_response<T: DeserializeOwned>(req: Result<Response, Error>) -> Result<T,NetworkResponseError> {
-    match req {
-        Ok(response) => {
-            match quick_xml::de::from_reader(BufReader::new(response.into_reader())) {
-                Ok(xml) => Ok(xml),
-                Err(e) => Err(NetworkResponseError::XMLSerializationError(e))
+    req.map(|response| response.into_reader())
+        .map_err(|e|  
+            if let Error::Status(401, _r) = e {
+                NetworkResponseError::UnAuthorized
             }
-        },
-        Err(Error::Status(401, _r)) => Err(NetworkResponseError::UnAuthorized),
-        Err(e) => Err(NetworkResponseError::UnknownNetworkError(e)),
-    }
+            else {
+                NetworkResponseError::UnknownNetworkError(e)
+            })
+        .map(|reader| BufReader::new(reader))
+        .and_then(|buf_reader| Ok(quick_xml::de::from_reader(buf_reader)?))
 }
 
