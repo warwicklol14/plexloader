@@ -3,6 +3,7 @@ use serde::de::DeserializeOwned;
 use crate::constants::*;
 use crate::NetworkResponseError;
 use std::io::BufReader;
+use crate::utils::append_to_plex_server_uri;
 
 fn plex_default_header_middleware(req: Request, next: MiddlewareNext) -> Result<Response, Error> {
     next.handle(req.set(PLEX_CLIENT_IDENTIFIER_HEADER_NAME, PLEX_CLIENT_IDENTIFIER_HEADER_VALUE)
@@ -36,6 +37,13 @@ pub fn plex_login(username: &str, password: &str) -> Result<Response, Error> {
 pub fn plex_media(media_link: &str, access_token: &str) -> Result<Response,Error> {
     plex_agent()
         .get(media_link)
+        .set(PLEX_TOKEN_HEADER_NAME, access_token)
+        .call()
+}
+
+pub fn plex_sections(server_uri: &str, access_token: &str) -> Result<Response, Error> {
+    plex_agent()
+        .get(&append_to_plex_server_uri(server_uri, PLEX_SECTION_ENDPOINT))
         .set(PLEX_TOKEN_HEADER_NAME, access_token)
         .call()
 }

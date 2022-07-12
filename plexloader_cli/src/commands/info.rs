@@ -11,6 +11,7 @@ pub struct Info {
 
 mod link;
 mod servers;
+mod sections;
 
 #[derive(Subcommand)]
 enum InfoCommands {
@@ -19,6 +20,9 @@ enum InfoCommands {
 
     /// Prints information about the servers you are in
     Servers(servers::Servers),
+
+    /// Prints information about the sections of a server
+    Sections(sections::Sections),
 }
 
 impl CommandHandler for Info {
@@ -27,6 +31,7 @@ impl CommandHandler for Info {
         match &self.command {
             InfoCommands::Link(link) => link.handle(plex_loader)?,
             InfoCommands::Servers(servers) => servers.handle(plex_loader)?,
+            InfoCommands::Sections(sections) => sections.handle(plex_loader)?,
         }
         Ok(())
     }

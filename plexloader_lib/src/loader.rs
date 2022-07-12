@@ -54,6 +54,14 @@ impl PlexLoader {
         })
     }
 
+    pub fn get_sections(&self, server: &PlexServer) -> Result<Vec<PlexMediaSection>, SectionFetchError> {
+        let req_server = self.servers.iter().find(|&s| s == server).unwrap();
+        let response = network::plex_sections(&req_server.uri, &req_server.access_token);
+        let container = network::get_xml_from_response::<PlexSectionContainer>(response)?;
+        let sections = container.try_into()?;
+        Ok(sections)
+    }
+
     pub fn get_media_resources(&self, media_link: &str) -> Result<Vec<PlexMediaResource>, MediaResourceFetchError> {
         let req_media_metadata_uri = self.get_metadata_uri(media_link)?;
         let req_media_container = self.get_media(&req_media_metadata_uri)?;

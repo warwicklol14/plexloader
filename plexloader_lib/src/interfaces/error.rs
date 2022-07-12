@@ -33,6 +33,16 @@ pub struct ServerNotFoundError {}
 #[error("can't find public uri of the server")]
 pub struct URINotFoundError {}
 
+#[derive(Error, Debug)]
+#[error("can't convert sections from deserialized values")]
+pub struct SectionConversionError {}
+
+#[derive(Error, Debug)]
+#[error("can't fetch section details")]
+pub enum SectionFetchError {
+    NetworkError(#[from] NetworkResponseError),
+    ConversionError(#[from] SectionConversionError),
+}
 
 #[derive(Error, Debug)]
 #[error("can't fetch server details")]
