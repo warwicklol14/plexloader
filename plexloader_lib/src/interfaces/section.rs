@@ -29,7 +29,8 @@ pub enum PlexFeatureDirectory {
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct PlexHubDirectory {
-    hubKey: String,
+    #[serde(rename = "hubKey")]
+    hub_key: String,
 }
 
 #[derive(Deserialize, Debug, Clone)]

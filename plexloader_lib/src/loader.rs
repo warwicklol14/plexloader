@@ -1,14 +1,68 @@
 mod network;
 pub mod login;
-mod downloader;
-mod player;
+pub mod downloader;
+pub mod player;
 
 use crate::interfaces::*;
 use crate::utils::*;
-use downloader::download_aria;
-use player::play_media_mpv;
-use std::path::{Path};
+use crate::constants::PLEX_EXCLUDE_ALLLEAVES;
 
+fn construct_video_resource(metadata_uri: PlexMediaMetadataUri, video: PlexVideo) -> Result<PlexMediaResource, MediaResourceFetchError>{
+    let mut video_resources = vec![];
+    for media in video.media {
+        video_resources.push(PlexVideoResource {
+            title: video.title.clone(),
+            file_name: truncate_to_filename(media.part.file)?,
+            access_token: metadata_uri.server_token.clone(),
+            resource_path: append_to_plex_server_uri(&metadata_uri.server_uri, &media.part.key),
+        })
+    }
+    Ok(PlexMediaResource::VideoResource(video_resources))
+}
+
+fn construct_directory_children(server_uri: &str, episodes: Vec<PlexVideo>) -> Result<Vec<PlexDirectoryChild>, FileNameNotFoundError> {
+    let mut directory_children = vec![];
+    for episode in episodes {
+        for media in episode.media {
+            directory_children.push(PlexDirectoryChild {
+                title: episode.title.clone(),
+                file_name: truncate_to_filename(media.part.file)?,
+                resource_path: append_to_plex_server_uri(server_uri, &media.part.key)
+            })
+        }
+    }
+    Ok(directory_children)
+}
+
+fn construct_season_resource(metadata_uri: &PlexMediaMetadataUri, directory: PlexDirectory) -> Result<PlexDirectoryResource, MediaResourceFetchError> {
+    let link = append_to_plex_server_uri(&metadata_uri.server_uri, &directory.key);
+    let response = network::plex_media(&link, &metadata_uri.server_token);
+    let season = network::get_xml_from_response::<PlexSeasonContainer>(response)?;
+    let children = construct_directory_children(&metadata_uri.server_uri, season.episodes)?;
+    Ok(PlexDirectoryResource {
+        title: directory.title,
+        access_token: metadata_uri.server_token.clone(),
+        children
+    })
+}
+
+fn construct_directory_resource(metadata_uri: PlexMediaMetadataUri, directory: PlexDirectory) -> Result<PlexMediaResource, MediaResourceFetchError> {
+    let mut directory_resources = vec![];
+    if directory.directory_type == "show" {
+        let link = append_to_plex_server_uri(&metadata_uri.server_uri, &directory.key);
+        let link = append_to_plex_server_uri(&link, PLEX_EXCLUDE_ALLLEAVES);
+        let response = network::plex_media(&link, &metadata_uri.server_token);
+        let show = network::get_xml_from_response::<PlexShowContainer>(response)?;
+        for mut season in show.seasons {
+            season.title = format!("{}/{}", directory.title, season.title);
+            directory_resources.push(construct_season_resource(&metadata_uri, season)?);
+        }
+    }
+    else if directory.directory_type == "season" {
+        directory_resources.push(construct_season_resource(&metadata_uri, directory)?);
+    }
+    Ok(PlexMediaResource::DirectoryResource(directory_resources))
+}
 
 fn get_resources(plex_user: &PlexUser) -> Result<Resources, NetworkResponseError> {
     let response = network::plex_resources(&plex_user.auth_token);
@@ -62,42 +116,12 @@ impl PlexLoader {
         Ok(sections)
     }
 
-    pub fn get_media_resources(&self, media_link: &str) -> Result<Vec<PlexMediaResource>, MediaResourceFetchError> {
+    pub fn get_media_resource(&self, media_link: &str) -> Result<PlexMediaResource, MediaResourceFetchError> {
         let req_media_metadata_uri = self.get_metadata_uri(media_link)?;
         let req_media_container = self.get_media(&req_media_metadata_uri)?;
         match req_media_container.item {
-            PlexContainerItem::Video(v) => {
-                let mut media_resources = vec![];
-                for media in v.media {
-                    media_resources.push(PlexMediaResource {
-                        title: v.title.clone(),
-                        file_name: truncate_to_filename(media.part.file)?,
-                        access_token: req_media_metadata_uri.server_token.clone(),
-                        resource_path: append_to_plex_server_uri(&req_media_metadata_uri.server_uri, &media.part.key),
-                    })
-                }
-                Ok(media_resources)
-            }
-            PlexContainerItem::Directory(d) => {
-                Ok(vec![(PlexMediaResource {
-                    title: d.title,
-                    file_name: String::new(),
-                    access_token: req_media_metadata_uri.server_token,
-                    resource_path: d.key,
-                })])
-            }
+            PlexContainerItem::Video(v) => construct_video_resource(req_media_metadata_uri, v),
+            PlexContainerItem::Directory(d) => construct_directory_resource(req_media_metadata_uri, d),
         }
-    }
-
-    pub fn download_media(&self, media_resource: &PlexMediaResource, download_dir_path: &Path) -> Result<(), MediaDownloadError>{ 
-        let mut child = download_aria(&media_resource.resource_path, &download_dir_path , &media_resource.file_name, &media_resource.access_token)?;
-        child.wait()?;
-        Ok(())
-    }
-
-    pub fn playback_media(&self, media_resource: &PlexMediaResource) -> Result<(), MediaPlaybackError>{ 
-        let mut child = play_media_mpv(&media_resource.resource_path, &media_resource.title, &media_resource.access_token)?;
-        child.wait()?;
-        Ok(())
     }
 }

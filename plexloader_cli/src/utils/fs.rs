@@ -4,15 +4,18 @@ use std::fs::create_dir_all;
 use plexloader_lib::PlexUser;
 use directories::{ProjectDirs, UserDirs};
 
+pub fn create_dir(dir_path: &PathBuf) -> anyhow::Result<()> {
+    if !dir_path.exists() {
+        create_dir_all(dir_path)?;
+    }
+    Ok(())
+}
+
 pub fn init_dirs() -> anyhow::Result<()>{
     let data_dir = get_cli_data_dir();
-    if !&data_dir.exists() {
-        create_dir_all(data_dir)?;
-    }
+    create_dir(&data_dir)?;
     let download_dir = get_download_dir();
-    if !&download_dir.exists() {
-        create_dir_all(download_dir)?;
-    }
+    create_dir(&download_dir)?;
     Ok(())
 }
 

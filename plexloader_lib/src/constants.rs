@@ -3,6 +3,8 @@ pub const PLEX_SERVER_ENDPOINT: &str = "https://plex.tv/api/v2/resources?include
 
 pub const PLEX_SECTION_ENDPOINT: &str = "/media/providers";
 
+pub const PLEX_EXCLUDE_ALLLEAVES: &str = "?excludeAllLeaves=1";
+
 pub const PLEX_CLIENT_IDENTIFIER_HEADER_NAME: &str = "X-Plex-Client-Identifier";
 pub const PLEX_CLIENT_IDENTIFIER_HEADER_VALUE: &str = "PlexDownloader";
 
