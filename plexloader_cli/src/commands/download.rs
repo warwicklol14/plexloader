@@ -7,6 +7,7 @@ use anyhow::{Result};
 
 mod link;
 mod sections;
+mod servers;
 
 #[derive(Parser)]
 pub struct Download {
@@ -19,8 +20,11 @@ enum DownloadCommands {
     /// Download from given link
     Link(link::Link),
 
-    /// Download a whole plex section
+    /// Download whole plex sections
     Sections(sections::Sections),
+
+    /// Download whole plex servers
+    Servers(servers::Servers),
 }
 
 
@@ -30,6 +34,7 @@ impl CommandHandler for Download {
         match &self.command {
             DownloadCommands::Link(link) => link.handle(plex_loader)?,
             DownloadCommands::Sections(section) => section.handle(plex_loader)?,
+            DownloadCommands::Servers(servers) => servers.handle(plex_loader)?,
         }
         Ok(())
     }
