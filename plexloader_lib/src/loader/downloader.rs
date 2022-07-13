@@ -2,10 +2,30 @@ use std::process::Command;
 use crate::utils::construct_token_header;
 use std::process::{Child};
 use std::path::{Path, PathBuf};
-use crate::MediaDownloadError;
+use crate::{MediaDownloadError, SectionDownloadError};
 use crate::utils::fs::create_dir;
 
-use crate::{PlexVideoResource, PlexDirectoryResource, PlexDirectoryChild};
+use crate::loader::PlexLoader;
+use crate::{PlexVideoResource, PlexDirectoryResource, PlexDirectoryChild, PlexServer, PlexSection, PlexMediaResource};
+
+pub fn download_section(plex_loader: &PlexLoader, server: &PlexServer, section: &PlexSection, download_dir: &Path) -> Result<(), SectionDownloadError> {
+    let media_resources = plex_loader.get_section_items(server, section)?;
+    for media_resource in media_resources {
+        match media_resource {
+            PlexMediaResource::VideoResource(videos) => {
+                for video in videos {
+                    download_video_resource(&video, download_dir)?;
+                }
+            },
+            PlexMediaResource::DirectoryResource(directories) => {
+                for directory in directories {
+                    download_directory_resource(&directory, download_dir)?;
+                }
+            },
+        }
+    }
+    Ok(())
+}
 
 pub fn download_video_resource(video: &PlexVideoResource, download_dir: &Path) -> Result<(), MediaDownloadError> {
     let mut download_dir = PathBuf::from(download_dir);

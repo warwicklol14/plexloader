@@ -7,14 +7,14 @@ use crate::interfaces::*;
 use crate::utils::*;
 use crate::constants::PLEX_EXCLUDE_ALLLEAVES;
 
-fn construct_video_resource(metadata_uri: PlexMediaMetadataUri, video: PlexVideo) -> Result<PlexMediaResource, MediaResourceFetchError>{
+fn construct_video_resource(access_token: &str, server_uri: &str , video: PlexVideo) -> Result<PlexMediaResource, MediaResourceFetchError>{
     let mut video_resources = vec![];
     for media in video.media {
         video_resources.push(PlexVideoResource {
             title: video.title.clone(),
             file_name: truncate_to_filename(media.part.file)?,
-            access_token: metadata_uri.server_token.clone(),
-            resource_path: append_to_plex_server_uri(&metadata_uri.server_uri, &media.part.key),
+            access_token: String::from(access_token),
+            resource_path: append_to_plex_server_uri(server_uri, &media.part.key),
         })
     }
     Ok(PlexMediaResource::VideoResource(video_resources))
@@ -34,32 +34,32 @@ fn construct_directory_children(server_uri: &str, episodes: Vec<PlexVideo>) -> R
     Ok(directory_children)
 }
 
-fn construct_season_resource(metadata_uri: &PlexMediaMetadataUri, directory: PlexDirectory) -> Result<PlexDirectoryResource, MediaResourceFetchError> {
-    let link = append_to_plex_server_uri(&metadata_uri.server_uri, &directory.key);
-    let response = network::plex_media(&link, &metadata_uri.server_token);
+fn construct_season_resource(access_token: &str, server_uri: &str, directory: PlexDirectory) -> Result<PlexDirectoryResource, MediaResourceFetchError> {
+    let link = append_to_plex_server_uri(&server_uri, &directory.key);
+    let response = network::plex_media(&link, &access_token);
     let season = network::get_xml_from_response::<PlexSeasonContainer>(response)?;
-    let children = construct_directory_children(&metadata_uri.server_uri, season.episodes)?;
+    let children = construct_directory_children(&server_uri, season.episodes)?;
     Ok(PlexDirectoryResource {
         title: directory.title,
-        access_token: metadata_uri.server_token.clone(),
+        access_token: String::from(access_token),
         children
     })
 }
 
-fn construct_directory_resource(metadata_uri: PlexMediaMetadataUri, directory: PlexDirectory) -> Result<PlexMediaResource, MediaResourceFetchError> {
+fn construct_directory_resource(access_token: &str, server_uri: &str, directory: PlexDirectory) -> Result<PlexMediaResource, MediaResourceFetchError> {
     let mut directory_resources = vec![];
     if directory.directory_type == "show" {
-        let link = append_to_plex_server_uri(&metadata_uri.server_uri, &directory.key);
+        let link = append_to_plex_server_uri(&server_uri, &directory.key);
         let link = append_to_plex_server_uri(&link, PLEX_EXCLUDE_ALLLEAVES);
-        let response = network::plex_media(&link, &metadata_uri.server_token);
+        let response = network::plex_media(&link, &access_token);
         let show = network::get_xml_from_response::<PlexShowContainer>(response)?;
         for mut season in show.seasons {
             season.title = format!("{}/{}", directory.title, season.title);
-            directory_resources.push(construct_season_resource(&metadata_uri, season)?);
+            directory_resources.push(construct_season_resource(access_token, server_uri , season)?);
         }
     }
     else if directory.directory_type == "season" {
-        directory_resources.push(construct_season_resource(&metadata_uri, directory)?);
+        directory_resources.push(construct_season_resource(access_token, server_uri , directory)?);
     }
     Ok(PlexMediaResource::DirectoryResource(directory_resources))
 }
@@ -120,8 +120,28 @@ impl PlexLoader {
         let req_media_metadata_uri = self.get_metadata_uri(media_link)?;
         let req_media_container = self.get_media(&req_media_metadata_uri)?;
         match req_media_container.item {
-            PlexContainerItem::Video(v) => construct_video_resource(req_media_metadata_uri, v),
-            PlexContainerItem::Directory(d) => construct_directory_resource(req_media_metadata_uri, d),
+            PlexContainerItem::Video(v) => construct_video_resource(&req_media_metadata_uri.server_token, &req_media_metadata_uri.server_uri, v),
+            PlexContainerItem::Directory(d) => construct_directory_resource(&req_media_metadata_uri.server_token, &req_media_metadata_uri.server_uri, d),
         }
     }
+
+    pub fn get_section_items(&self, server: &PlexServer, section: &PlexSection) -> Result<Vec<PlexMediaResource>, MediaResourceFetchError> {
+        let mut media_resources = vec![];
+        let response = network::plex_section_items(&server.uri, &server.access_token, &section.key);
+        let section_items = network::get_xml_from_response::<PlexSectionItemsContainer>(response)?;
+        match section_items.items {
+            PlexSectionItem::MovieSection(videos) => {
+                for video in videos {
+                    media_resources.push(construct_video_resource(&server.access_token, &server.uri, video)?);
+                }
+            },
+            PlexSectionItem::TvSection(directories) => {
+                for directory in directories {
+                    media_resources.push(construct_directory_resource(&server.access_token, &server.uri, directory)?);
+                }
+            },
+        }
+        Ok(media_resources)
+    }
 }
+

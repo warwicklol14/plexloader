@@ -67,6 +67,13 @@ pub enum MediaDownloadError {
 }
 
 #[derive(Error, Debug)]
+#[error("can't download section")]
+pub enum SectionDownloadError {
+    MediaDownloadError(#[from] MediaDownloadError),
+    SectionFetchError(#[from] MediaResourceFetchError),
+}
+
+#[derive(Error, Debug)]
 #[error("can't playback media")]
 pub enum MediaPlaybackError {
     MpvError(#[from] std::io::Error),

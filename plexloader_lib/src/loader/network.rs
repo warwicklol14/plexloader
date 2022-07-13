@@ -41,6 +41,13 @@ pub fn plex_media(media_link: &str, access_token: &str) -> Result<Response,Error
         .call()
 }
 
+pub fn plex_section_items(server_uri: &str, access_token: &str, section_key: &str) -> Result<Response, Error> {
+    plex_agent()
+        .get(&format!("{}{}{}", server_uri, section_key, "/all"))
+        .set(PLEX_TOKEN_HEADER_NAME, access_token)
+        .call()
+}
+
 pub fn plex_sections(server_uri: &str, access_token: &str) -> Result<Response, Error> {
     plex_agent()
         .get(&append_to_plex_server_uri(server_uri, PLEX_SECTION_ENDPOINT))

@@ -1,11 +1,28 @@
 use serde::Deserialize;
+use std::fmt;
 use crate::SectionConversionError;
+use crate::{PlexVideo, PlexDirectory};
 
 #[derive(Deserialize, Debug)]
 #[serde(rename = "MediaContainer")]
 pub struct PlexSectionContainer {
     #[serde(rename = "MediaProvider")]
     pub provider: PlexSectionProvider,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename = "MediaContainer")]
+pub struct PlexSectionItemsContainer {
+    #[serde(rename = "$value")]
+    pub items: PlexSectionItem,
+}
+
+#[derive(Deserialize, Debug)]
+pub enum PlexSectionItem {
+    #[serde(rename = "Video")]
+    MovieSection(Vec<PlexVideo>),
+    #[serde(rename = "Directory")]
+    TvSection(Vec<PlexDirectory>),
 }
 
 #[derive(Deserialize, Debug)]
@@ -84,5 +101,14 @@ impl TryFrom<PlexSectionContainer> for Vec<PlexMediaSection> {
             }
         }
         Ok(sections)
+    }
+}
+
+impl fmt::Display for PlexMediaSection {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            PlexMediaSection::MovieSection(s) => write!(f, "{}", s.title),
+            PlexMediaSection::TvSection(s) => write!(f, "{}", s.title),
+        }
     }
 }
