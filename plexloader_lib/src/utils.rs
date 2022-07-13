@@ -70,13 +70,23 @@ pub fn filter_non_servers(resources: Vec<Resource>) -> Vec<Resource> {
 
 pub fn find_public_uri_from_connections(
     connections: Connections,
+    public_address: String,
 ) -> Result<String, URINotFoundError> {
-    connections
+    let domain_connection = connections
         .connection
-        .into_iter()
-        .find(|c| c.port == 443)
-        .ok_or(URINotFoundError {})
-        .map(|c| c.uri)
+        .iter()
+        .find(|c| c.port == 443);
+    match domain_connection {
+        Some(c) => Ok(c.uri.clone()),
+        None => {
+            connections
+                .connection
+                .into_iter()
+                .find(|c| c.address == public_address)
+                .ok_or(URINotFoundError {})
+                .map(|c| c.uri)
+        }
+    }
 }
 
 pub fn append_to_plex_server_uri(plex_server_uri: &str, append_str: &str) -> String {
@@ -107,10 +117,12 @@ mod tests {
                 name: "Android-Phone".to_string(),
                 client_identifier: "hash-com-plexapp-android".to_string(),
                 access_token: "".to_string(),
+                public_address: "8.8.8.8".to_string(),
                 connections: Connections {
                     connection: vec![Connection {
                         uri: "http://192.168.0.1:32500".to_string(),
                         port: 32500,
+                        address: "192.168.0.1".to_string(),
                     }],
                 },
             },
@@ -118,10 +130,12 @@ mod tests {
                 name: "Plex Server".to_string(),
                 client_identifier: "hash-com-plexapp-android".to_string(),
                 access_token: "token".to_string(),
+                public_address: "plex.tv".to_string(),
                 connections: Connections {
                     connection: vec![Connection {
                         uri: "http://plex.tv:443".to_string(),
                         port: 443,
+                        address: "plex.tv".to_string(),
                     }],
                 },
             },
@@ -170,31 +184,56 @@ mod tests {
         ];
 
         assert_eq!(
-            find_server_from_hash(test_plex_servers.clone(), "test identifier"),
-            Ok(test_plex_servers[0].clone())
+            find_server_from_hash(&test_plex_servers, "test identifier"),
+            Ok(&test_plex_servers[0])
         );
     }
     #[test]
-    fn can_find_uri_from_connections() {
+    fn can_find_public_uri_from_connections() {
         let test_plex_server = Connections {
             connection: vec![
                 Connection {
-                    port: 443,
-                    uri: "https://plex.tv:443".to_string(),
-                },
-                Connection {
                     port: 32400,
                     uri: "https://192-168-0-1.plex.direct:32400".to_string(),
+                    address: "192.168.0.1".to_string(),
                 },
                 Connection {
                     port: 32400,
                     uri: "https://8-8-8-8.hash.plex.direct:32400".to_string(),
+                    address: "8.8.8.8".to_string(),
                 },
             ],
         };
 
         assert_eq!(
-            find_public_uri_from_connections(test_plex_server),
+            find_public_uri_from_connections(test_plex_server, "8.8.8.8".to_string()),
+            Ok("https://8-8-8-8.hash.plex.direct:32400".to_string()),
+        );
+    }
+
+    fn can_find_domain_uri_from_connections() {
+        let test_plex_server = Connections {
+            connection: vec![
+                Connection {
+                    port: 443,
+                    uri: "https://plex.tv:443".to_string(),
+                    address: "plex.tv".to_string(),
+                },
+                Connection {
+                    port: 32400,
+                    uri: "https://192-168-0-1.plex.direct:32400".to_string(),
+                    address: "192.168.0.1".to_string(),
+                },
+                Connection {
+                    port: 32400,
+                    uri: "https://8-8-8-8.hash.plex.direct:32400".to_string(),
+                    address: "8.8.8.8".to_string(),
+                },
+            ],
+        };
+
+        assert_eq!(
+            find_public_uri_from_connections(test_plex_server, "8.8.8.8".to_string()),
             Ok("https://plex.tv:443".to_string()),
         );
     }

@@ -12,6 +12,9 @@ pub struct Resource {
     #[serde(rename = "clientIdentifier")]
     pub client_identifier: String,
 
+    #[serde(rename = "publicAddress")]
+    pub public_address: String,
+
     #[serde(rename = "accessToken")]
     pub access_token: String,
 
@@ -27,5 +30,6 @@ pub struct Connections{
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 pub struct Connection {
     pub uri: String,
-    pub port: usize
+    pub port: usize,
+    pub address: String,
 }
