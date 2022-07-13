@@ -9,17 +9,19 @@ use crate::loader::PlexLoader;
 use crate::{PlexVideoResource, PlexDirectoryResource, PlexDirectoryChild, PlexServer, PlexSection, PlexMediaResource};
 
 pub fn download_section(plex_loader: &PlexLoader, server: &PlexServer, section: &PlexSection, download_dir: &Path) -> Result<(), SectionDownloadError> {
+    let mut download_dir = PathBuf::from(download_dir);
+    download_dir.push(&section.title);
     let media_resources = plex_loader.get_section_items(server, section)?;
     for media_resource in media_resources {
         match media_resource {
             PlexMediaResource::VideoResource(videos) => {
                 for video in videos {
-                    download_video_resource(&video, download_dir)?;
+                    download_video_resource(&video, &download_dir)?;
                 }
             },
             PlexMediaResource::DirectoryResource(directories) => {
                 for directory in directories {
-                    download_directory_resource(&directory, download_dir)?;
+                    download_directory_resource(&directory, &download_dir)?;
                 }
             },
         }
