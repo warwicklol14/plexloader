@@ -3,6 +3,8 @@ use url::{ParseError, Url};
 use std::path::{Path};
 use crate::constants::PLEX_TOKEN_HEADER_NAME;
 
+pub mod fs;
+
 pub fn construct_token_header(server_token: &str) -> String {
     format!("{}: {}", PLEX_TOKEN_HEADER_NAME, server_token)
 }

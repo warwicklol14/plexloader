@@ -1,15 +1,8 @@
 use std::path::{PathBuf};
 use std::fs::File;
-use std::fs::create_dir_all;
 use plexloader_lib::PlexUser;
 use directories::{ProjectDirs, UserDirs};
-
-pub fn create_dir(dir_path: &PathBuf) -> anyhow::Result<()> {
-    if !dir_path.exists() {
-        create_dir_all(dir_path)?;
-    }
-    Ok(())
-}
+use plexloader_lib::utils::fs::create_dir;
 
 pub fn init_dirs() -> anyhow::Result<()>{
     let data_dir = get_cli_data_dir();

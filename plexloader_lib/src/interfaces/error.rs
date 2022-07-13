@@ -63,11 +63,18 @@ pub enum MediaResourceFetchError {
 #[error("can't download media")]
 pub enum MediaDownloadError {
     AriaError(#[from] std::io::Error),
+    DownloadDirectoryCreationError(#[from] DirectoryCreationError),
 }
 
 #[derive(Error, Debug)]
 #[error("can't playback media")]
 pub enum MediaPlaybackError {
     MpvError(#[from] std::io::Error),
+}
+
+#[derive(Error, Debug)]
+#[error("can't create directory")]
+pub enum DirectoryCreationError {
+    CreateDirError(#[from] std::io::Error),
 }
 
