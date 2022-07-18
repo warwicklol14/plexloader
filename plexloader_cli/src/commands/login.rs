@@ -1,6 +1,7 @@
 use clap::{Args};
 
 use plexloader_lib::loader::login::plex_login_through_credentials;
+use plexloader_lib::utils::fs::serialize_plex_user;
 
 use dialoguer::{
     Input,
@@ -9,7 +10,7 @@ use dialoguer::{
 
 use anyhow::{Context};
 
-use crate::utils::{serialize_plex_user, success};
+use crate::utils::{success, get_auth_file_path};
 use super::CommandHandler;
 
 #[derive(Args)]
@@ -25,7 +26,8 @@ impl CommandHandler for Login {
             .interact()?;
         let plex_user = plex_login_through_credentials(&username, &password)
             .with_context(|| "unable to to login. check your credentials")?;
-        serialize_plex_user(plex_user)
+        let auth_file_path = get_auth_file_path();
+        serialize_plex_user(&plex_user, auth_file_path)
             .with_context(|| "unable to save auth info")?;
         println!("{}", success().apply_to("Login was successfull"));
         Ok(())
