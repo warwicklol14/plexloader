@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Serialize, Deserialize};
 use std::fmt;
 
 #[derive(Deserialize, Debug)]
@@ -51,27 +51,27 @@ pub struct PlexMediaMetadataUri {
 }
 
 
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub enum PlexMediaResource {
     VideoResource(Vec<PlexVideoResource>),
     DirectoryResource(Vec<PlexDirectoryResource>)
 }
 
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct PlexDirectoryResource {
     pub title: String,
     pub access_token: String,
     pub children: Vec<PlexDirectoryChild>,
 }
 
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct PlexDirectoryChild {
     pub title: String,
     pub file_name: String,
     pub resource_path: String,
 }
 
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct PlexVideoResource {
     pub title: String,
     pub file_name: String,
